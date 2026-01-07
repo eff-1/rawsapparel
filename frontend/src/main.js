@@ -22,11 +22,12 @@ const routes = [
   { path: '/pinterest-test', component: PinterestTest },
   { path: '/image-search-test', component: ImageSearchTest },
   { path: '/google-demo', component: GoogleSearchDemo },
-  { path: '/contact', redirect: '/about' } // Redirect contact to about page
+  { path: '/contact', redirect: '/about' }, // Redirect contact to about page
+  { path: '/:pathMatch(.*)*', redirect: '/' } // Catch-all route
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory('/'),
   routes
 })
 
