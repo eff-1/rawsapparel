@@ -1,332 +1,354 @@
 <template>
-  <div class="min-h-screen bg-soft-warm-gray py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Search Header -->
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-jet-black mb-4">Find Your Perfect Style</h1>
-        <SearchBar @search="handleSearch" />
-        
-        <!-- Collapsible Filters - Mobile Optimized -->
-        <div v-if="currentQuery" class="mt-6">
-          <!-- Filter Toggle Button -->
-          <div class="flex justify-center mb-4">
-            <button 
-              @click="showFilters = !showFilters"
-              class="flex items-center gap-2 px-4 py-2 bg-white border border-champagne-gold text-champagne-gold rounded-full text-sm font-medium hover:bg-champagne-gold hover:text-white transition-all duration-200"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
-              </svg>
-              {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-              <svg :class="{ 'rotate-180': showFilters }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-          </div>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header Section -->
+    <div class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="text-center">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Fashion Search</h1>
+          <p class="text-gray-600 mb-6">Discover millions of fashion styles powered by Google Images</p>
           
-          <!-- Filter Options - Collapsible -->
-          <div v-show="showFilters" class="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <!-- Custom Category Dropdown -->
-              <div class="relative">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <div class="relative">
-                  <button 
-                    @click="toggleDropdown('category')"
-                    class="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-champagne-gold focus:border-champagne-gold transition-all duration-200"
-                  >
-                    <span class="block truncate">{{ getCategoryLabel(selectedCategory) }}</span>
-                    <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </button>
-                  
-                  <div v-show="dropdownOpen === 'category'" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg">
-                    <div class="py-1">
-                      <button 
-                        v-for="option in categoryOptions" 
-                        :key="option.value"
-                        @click="selectOption('category', option.value)"
-                        class="w-full px-4 py-2 text-left hover:bg-champagne-gold hover:text-white transition-colors duration-200"
-                      >
-                        {{ option.label }}
-                      </button>
-                    </div>
+          <!-- Search Bar -->
+          <div class="max-w-2xl mx-auto relative">
+            <div class="flex">
+              <div class="relative flex-1">
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Search for fashion styles..."
+                  class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  @keyup.enter="performSearch"
+                  @input="onSearchInput"
+                  @focus="showSuggestions = true"
+                  @blur="hideSuggestions"
+                />
+                
+                <!-- Search Suggestions Dropdown -->
+                <div v-if="showSuggestions && filteredSuggestions.length > 0" 
+                     class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 mt-1">
+                  <div class="py-2 max-h-64 overflow-y-auto">
+                    <button 
+                      v-for="suggestion in filteredSuggestions" 
+                      :key="suggestion"
+                      @mousedown="selectSuggestion(suggestion)"
+                      class="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors text-sm flex items-center"
+                    >
+                      <svg class="w-4 h-4 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                      {{ suggestion }}
+                    </button>
                   </div>
                 </div>
               </div>
               
-              <!-- Custom Style Dropdown -->
-              <div class="relative">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Style</label>
-                <div class="relative">
-                  <button 
-                    @click="toggleDropdown('style')"
-                    class="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-champagne-gold focus:border-champagne-gold transition-all duration-200"
-                  >
-                    <span class="block truncate">{{ getStyleLabel(selectedStyle) }}</span>
-                    <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </button>
-                  
-                  <div v-show="dropdownOpen === 'style'" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg">
-                    <div class="py-1">
-                      <button 
-                        v-for="option in styleOptions" 
-                        :key="option.value"
-                        @click="selectOption('style', option.value)"
-                        class="w-full px-4 py-2 text-left hover:bg-champagne-gold hover:text-white transition-colors duration-200"
-                      >
-                        {{ option.label }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Custom Location Dropdown -->
-              <div class="relative">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Origin</label>
-                <div class="relative">
-                  <button 
-                    @click="toggleDropdown('location')"
-                    class="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-champagne-gold focus:border-champagne-gold transition-all duration-200"
-                  >
-                    <span class="block truncate">{{ getLocationLabel(selectedLocation) }}</span>
-                    <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </button>
-                  
-                  <div v-show="dropdownOpen === 'location'" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg">
-                    <div class="py-1">
-                      <button 
-                        v-for="option in locationOptions" 
-                        :key="option.value"
-                        @click="selectOption('location', option.value)"
-                        class="w-full px-4 py-2 text-left hover:bg-champagne-gold hover:text-white transition-colors duration-200"
-                      >
-                        {{ option.label }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <button 
+                @click="performSearch"
+                :disabled="loading"
+                class="px-6 py-3 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+              >
+                <svg v-if="!loading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <svg v-else class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </button>
             </div>
             
-            <!-- Clear Filters Button -->
-            <div class="mt-4 text-center">
+            <!-- Quick Suggestions -->
+            <div class="mt-4 flex flex-wrap justify-center gap-2">
               <button 
-                @click="clearFilters"
-                class="px-4 py-2 text-sm text-gray-600 hover:text-jet-black transition-colors duration-200"
+                v-for="suggestion in quickSuggestions" 
+                :key="suggestion"
+                @click="searchQuery = suggestion; performSearch()"
+                class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors"
               >
-                Clear All Filters
+                {{ suggestion }}
               </button>
             </div>
           </div>
         </div>
       </div>
-      
-      <!-- Loading State -->
-      <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-champagne-gold"></div>
-        <p class="mt-4 text-gray-600">Finding perfect styles for you...</p>
-      </div>
-      
-      <!-- Results -->
-      <div v-else-if="searchResults.length > 0">
-        <!-- Results Header -->
-        <div class="mb-6">
-          <div class="flex justify-between items-center mb-4">
-            <div>
-              <p class="text-gray-900 font-medium">
-                {{ totalResults.toLocaleString() }} styles found for "{{ currentQuery }}"
-              </p>
-              <p class="text-sm text-gray-600">
-                Page {{ currentPage }} of {{ totalPages }}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Modern Image Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
-          <div 
-            v-for="image in searchResults" 
-            :key="image.id"
-            @click="selectImage(image)"
-            class="group cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <!-- High Quality Image -->
-            <div class="relative aspect-[3/4] overflow-hidden">
-              <img 
-                :src="getHighQualityImage(image)" 
-                :alt="image.title"
-                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                @error="handleImageError"
-                loading="lazy"
-              />
+    </div>
+
+    <!-- Filters Section -->
+    <div v-if="currentQuery" class="bg-white border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-6">
+            <!-- Category Filter -->
+            <div class="relative">
+              <button 
+                @click="toggleDropdown('category')"
+                class="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-4l-3 3.5L13 6m6 5l-3-3.5L13 11"></path>
+                </svg>
+                <span class="text-sm font-medium">{{ getCategoryLabel(selectedCategory) }}</span>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
               
-              <!-- Hover Overlay -->
-              <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div class="bg-white rounded-full p-3 shadow-lg">
-                    <svg class="w-6 h-6 text-jet-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                  </div>
+              <div v-show="dropdownOpen === 'category'" class="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
+                <div class="py-1">
+                  <button 
+                    v-for="option in categoryOptions" 
+                    :key="option.value"
+                    @click="selectOption('category', option.value)"
+                    class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center"
+                  >
+                    <component :is="option.icon" class="w-4 h-4 mr-3 text-gray-400" />
+                    {{ option.label }}
+                  </button>
                 </div>
               </div>
             </div>
+
+            <!-- Style Filter -->
+            <div class="relative">
+              <button 
+                @click="toggleDropdown('style')"
+                class="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                <span class="text-sm font-medium">{{ getStyleLabel(selectedStyle) }}</span>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              
+              <div v-show="dropdownOpen === 'style'" class="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
+                <div class="py-1">
+                  <button 
+                    v-for="option in styleOptions" 
+                    :key="option.value"
+                    @click="selectOption('style', option.value)"
+                    class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center"
+                  >
+                    <component :is="option.icon" class="w-4 h-4 mr-3 text-gray-400" />
+                    {{ option.label }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Clear Filters -->
+            <button 
+              v-if="selectedCategory || selectedStyle"
+              @click="clearFilters"
+              class="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Clear filters
+            </button>
+          </div>
+
+          <!-- Results Count -->
+          <div v-if="!loading && searchResults.length > 0" class="text-sm text-gray-600">
+            {{ totalResults.toLocaleString() }} results found
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Quota Warning -->
+    <div v-if="quotaExceeded" class="bg-orange-50 border-l-4 border-orange-400 p-4 mx-4 mt-4 rounded">
+      <div class="flex">
+        <svg class="w-5 h-5 text-orange-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+        </svg>
+        <div>
+          <h3 class="text-sm font-medium text-orange-800">API Quota Exceeded</h3>
+          <p class="text-sm text-orange-700">Daily search limit reached. Please try again later.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Loading State -->
+      <div v-if="loading" class="flex justify-center items-center py-20">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p class="text-gray-600">Searching for styles...</p>
+        </div>
+      </div>
+
+      <!-- Results Grid -->
+      <div v-else-if="searchResults.length > 0">
+        <!-- Results Info -->
+        <div class="mb-6 flex justify-between items-center">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Search Results for "{{ currentQuery }}"
+          </h2>
+          <div class="text-sm text-gray-500">
+            Page {{ currentPage }} of {{ totalPages }}
+          </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+          <div 
+            v-for="image in searchResults" 
+            :key="image.id"
+            class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer"
+            @click="selectImage(image)"
+          >
+            <!-- Image Container -->
+            <div class="aspect-w-3 aspect-h-4 bg-gray-200 overflow-hidden">
+              <img 
+                :src="image.thumbnailURL || image.imageURL" 
+                :alt="image.title"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                @error="handleImageError"
+                @load="handleImageLoad"
+                loading="lazy"
+              />
+            </div>
             
-            <!-- Image Info -->
-            <div class="p-3">
+            <!-- Product Info -->
+            <div class="p-4">
               <h3 class="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
                 {{ cleanTitle(image.title) }}
               </h3>
+              <p class="text-xs text-gray-500 mb-3">
+                {{ image.width }} × {{ image.height }}
+              </p>
               
               <!-- Action Buttons -->
-              <div class="flex gap-2">
+              <div class="flex space-x-2">
+                <button 
+                  @click.stop="selectImage(image)"
+                  class="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                >
+                  View
+                </button>
                 <button 
                   @click.stop="sendToWhatsApp(image)"
-                  class="flex-1 bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-green-600 transition-colors duration-200 flex items-center justify-center gap-1"
+                  class="flex-1 px-3 py-2 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
                 >
-                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-                  </svg>
                   Order
                 </button>
               </div>
             </div>
           </div>
         </div>
-        
+
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="mt-8 flex justify-center">
+        <div v-if="totalPages > 1" class="mt-12 flex justify-center">
           <nav class="flex items-center space-x-2">
             <button 
-              @click="goToPage(currentPage - 1)"
+              @click="prevPage"
               :disabled="currentPage === 1"
-              class="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
             
-            <button 
-              v-for="page in getVisiblePages()" 
-              :key="page"
-              @click="goToPage(page)"
-              :class="[
-                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                page === currentPage 
-                  ? 'bg-champagne-gold text-jet-black' 
-                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-              ]"
-            >
-              {{ page }}
-            </button>
+            <template v-for="page in getVisiblePages()" :key="page">
+              <span 
+                v-if="page === '...'"
+                class="px-3 py-2 text-sm text-gray-500"
+              >
+                ...
+              </span>
+              <button 
+                v-else
+                @click="goToPage(page)"
+                :class="[
+                  'px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                  page === currentPage 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                ]"
+              >
+                {{ page }}
+              </button>
+            </template>
             
             <button 
-              @click="goToPage(currentPage + 1)"
+              @click="nextPage"
               :disabled="!hasNextPage"
-              class="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
           </nav>
         </div>
-      </div>
-      
-      <!-- No Results -->
-      <div v-else-if="currentQuery && !loading" class="text-center py-12">
-        <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-        </svg>
-        <h3 class="text-xl font-medium text-gray-900 mb-2">No styles found</h3>
-        <p class="text-gray-600 mb-6">Try different keywords or adjust your filters</p>
-        <button @click="showSuggestions = true" class="btn-secondary">
-          View Suggestions
-        </button>
-      </div>
-      
-      <!-- Search Suggestions -->
-      <div v-if="showSuggestions" class="mt-8">
-        <h3 class="text-xl font-medium text-jet-black mb-4">Popular Searches</h3>
-        <div class="flex flex-wrap gap-3">
-          <button 
-            v-for="suggestion in suggestions" 
-            :key="suggestion"
-            @click="handleSearch(suggestion)"
-            class="px-4 py-2 bg-white border border-champagne-gold text-champagne-gold rounded-full hover:bg-champagne-gold hover:text-white transition-colors"
-          >
-            {{ suggestion }}
-          </button>
+
+        <!-- Preload Status -->
+        <div v-if="Object.keys(preloadedPages).length > 0" class="mt-6 text-center">
+          <p class="text-xs text-gray-500">
+            Pages {{ Object.keys(preloadedPages).join(', ') }} preloaded for faster browsing
+          </p>
         </div>
       </div>
+
+      <!-- No Results -->
+      <div v-else-if="currentQuery && !loading" class="text-center py-20">
+        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No results found</h3>
+        <p class="text-gray-600">Try adjusting your search terms or filters</p>
+      </div>
     </div>
-    
-    <!-- Modern Image Modal -->
+
+    <!-- Compact Image Modal -->
     <div v-if="showImageModal && selectedImage" 
-         class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" 
          @click="showImageModal = false">
-      <div class="max-w-4xl max-h-full w-full" @click.stop>
-        <div class="bg-white rounded-2xl overflow-hidden shadow-2xl max-h-full flex flex-col">
-          <!-- Modal Header -->
-          <div class="flex justify-between items-center p-4 border-b">
-            <h3 class="font-semibold text-lg text-gray-900 truncate pr-4">
-              {{ cleanTitle(selectedImage.title) }}
-            </h3>
-            <button 
-              @click="showImageModal = false"
-              class="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
+      <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden" @click.stop>
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-4 border-b">
+          <h3 class="text-lg font-semibold text-gray-900 truncate">
+            {{ cleanTitle(selectedImage.title) }}
+          </h3>
+          <button 
+            @click="showImageModal = false"
+            class="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Modal Content -->
+        <div class="flex flex-col md:flex-row max-h-[calc(90vh-80px)]">
+          <!-- Image -->
+          <div class="md:flex-1 bg-gray-50 flex items-center justify-center p-4">
+            <img 
+              :src="selectedImage.imageURL || selectedImage.thumbnailURL" 
+              :alt="selectedImage.title" 
+              class="max-w-full max-h-80 object-contain rounded"
+            />
           </div>
           
-          <!-- Modal Content -->
-          <div class="flex-1 overflow-auto">
-            <div class="md:flex">
-              <!-- Image -->
-              <div class="md:flex-1 bg-gray-50 flex items-center justify-center p-4">
-                <img 
-                  :src="selectedImage.imageURL || selectedImage.thumbnailURL" 
-                  :alt="selectedImage.title" 
-                  class="max-w-full max-h-96 object-contain rounded-lg shadow-lg"
-                />
-              </div>
-              
-              <!-- Details -->
-              <div class="md:w-80 p-6 space-y-4">
-                <div>
-                  <h4 class="font-medium text-gray-900 mb-2">Style Details</h4>
-                  <p class="text-gray-600 text-sm">{{ selectedImage.description }}</p>
-                </div>
-                
-                <div>
-                  <h4 class="font-medium text-gray-900 mb-2">Specifications</h4>
-                  <div class="space-y-1 text-sm text-gray-600">
-                    <p><span class="font-medium">Dimensions:</span> {{ selectedImage.width }}×{{ selectedImage.height }}</p>
-                    <p><span class="font-medium">Source:</span> {{ selectedImage.photographer }}</p>
-                  </div>
-                </div>
-                
-                <!-- Order Button -->
-                <button 
-                  @click="sendToWhatsApp(selectedImage); showImageModal = false"
-                  class="w-full bg-green-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-600 transition-colors duration-200 flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-                  </svg>
-                  Order This Style via WhatsApp
-                </button>
+          <!-- Details -->
+          <div class="md:w-80 p-4 space-y-4">
+            <div>
+              <h4 class="font-medium text-gray-900 mb-2">Details</h4>
+              <div class="space-y-1 text-sm text-gray-600">
+                <p><span class="font-medium">Dimensions:</span> {{ selectedImage.width }} × {{ selectedImage.height }}</p>
+                <p><span class="font-medium">Source:</span> {{ selectedImage.photographer }}</p>
               </div>
             </div>
+            
+            <!-- Order Button -->
+            <button 
+              @click="sendToWhatsApp(selectedImage); showImageModal = false"
+              class="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+              </svg>
+              <span>Order via WhatsApp</span>
+            </button>
           </div>
         </div>
       </div>
@@ -335,80 +357,100 @@
 </template>
 
 <script>
-import SearchBar from '../components/SearchBar.vue'
-import StyleCard from '../components/StyleCard.vue'
-
 export default {
   name: 'Search',
-  components: {
-    SearchBar,
-    StyleCard
-  },
   data() {
     return {
-      searchResults: [],
-      loading: false,
+      searchQuery: 'ankara dress',
       currentQuery: '',
-      showSuggestions: false,
+      loading: false,
+      searchResults: [],
+      searchTime: 0,
+      loadedImages: 0,
+      showImageModal: false,
+      selectedImage: null,
+      quotaExceeded: false,
+      
+      // Pagination
       currentPage: 1,
       totalPages: 1,
       totalResults: 0,
       hasNextPage: false,
       userCountry: 'NG',
-      showImageModal: false,
-      selectedImage: null,
       
-      // Filter system
-      showFilters: false,
+      // Preloading system
+      preloadedPages: {},
+      preloadingPages: new Set(),
+      
+      // Filters
       dropdownOpen: null,
       selectedCategory: '',
       selectedStyle: '',
-      selectedLocation: '',
       
-      // Filter options
+      // Search suggestions
+      showSuggestions: false,
+      allSuggestions: [
+        'Wedding gown',
+        'Traditional wear',
+        'Latest Ankara styles',
+        'Party dress',
+        'Stoned dresses',
+        'Casual wear',
+        'Evening dress',
+        'Business suit',
+        'Agbada',
+        'Lace styles',
+        'Aso ebi',
+        'Corporate wear',
+        'Cocktail dress',
+        'Maxi dress',
+        'Mini dress',
+        'Jumpsuit',
+        'Kaftan',
+        'Dashiki'
+      ],
+      
+      quickSuggestions: [
+        'Wedding gown',
+        'Traditional wear', 
+        'Latest Ankara styles',
+        'Party dress',
+        'Stoned dresses',
+        'Casual wear'
+      ],
+      
       categoryOptions: [
-        { value: '', label: 'All Categories' },
-        { value: 'female', label: 'Female Fashion' },
-        { value: 'male', label: 'Male Fashion' },
-        { value: 'children', label: 'Children\'s Wear' },
-        { value: 'traditional', label: 'Traditional Wear' },
-        { value: 'modern', label: 'Modern Style' }
+        { value: '', label: 'All Categories', icon: 'AllIcon' },
+        { value: 'female', label: 'Women\'s Fashion', icon: 'FemaleIcon' },
+        { value: 'male', label: 'Men\'s Fashion', icon: 'MaleIcon' },
+        { value: 'traditional', label: 'Traditional Wear', icon: 'TraditionalIcon' },
+        { value: 'modern', label: 'Modern Style', icon: 'ModernIcon' }
       ],
       
       styleOptions: [
-        { value: '', label: 'All Styles' },
-        { value: 'casual', label: 'Casual' },
-        { value: 'formal', label: 'Formal' },
-        { value: 'wedding', label: 'Wedding' },
-        { value: 'party', label: 'Party' },
-        { value: 'business', label: 'Business' }
-      ],
-      
-      locationOptions: [
-        { value: '', label: 'Nigerian Focus' },
-        { value: 'local', label: 'Local Nigerian' },
-        { value: 'african', label: 'African' },
-        { value: 'western', label: 'Western' },
-        { value: 'latest', label: 'Latest Trends' }
-      ],
-      
-      suggestions: [
-        'ankara dress',
-        'wedding gown',
-        'traditional agbada',
-        'party dress',
-        'casual wear',
-        'formal wear',
-        'children fashion',
-        'african print'
+        { value: '', label: 'All Styles', icon: 'AllIcon' },
+        { value: 'casual', label: 'Casual', icon: 'CasualIcon' },
+        { value: 'formal', label: 'Formal', icon: 'FormalIcon' },
+        { value: 'wedding', label: 'Wedding', icon: 'WeddingIcon' },
+        { value: 'party', label: 'Party', icon: 'PartyIcon' }
       ]
     }
   },
-  mounted() {
-    // Check for query parameter
-    if (this.$route.query.q) {
-      this.handleSearch(this.$route.query.q)
+  
+  computed: {
+    filteredSuggestions() {
+      if (!this.searchQuery.trim()) return this.allSuggestions.slice(0, 8)
+      
+      const query = this.searchQuery.toLowerCase()
+      return this.allSuggestions
+        .filter(suggestion => suggestion.toLowerCase().includes(query))
+        .slice(0, 8)
     }
+  },
+  
+  async mounted() {
+    // Auto-search on load
+    this.performSearch()
     
     // Close dropdowns when clicking outside
     document.addEventListener('click', this.handleClickOutside)
@@ -417,23 +459,61 @@ export default {
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside)
   },
+  
   methods: {
-    async handleSearch(query, page = 1) {
-      if (!query.trim()) return
+    onSearchInput() {
+      this.showSuggestions = true
+      
+      // Clear preloaded pages when search query changes
+      if (this.searchQuery.trim() !== this.currentQuery) {
+        this.preloadedPages = {}
+        this.preloadingPages.clear()
+      }
+    },
+    
+    selectSuggestion(suggestion) {
+      this.searchQuery = suggestion
+      this.showSuggestions = false
+      this.performSearch()
+    },
+    
+    hideSuggestions() {
+      setTimeout(() => {
+        this.showSuggestions = false
+      }, 200)
+    },
+    
+    async performSearch(page = 1) {
+      if (!this.searchQuery.trim()) return
+      
+      // If we have preloaded data for this page, use it instantly
+      if (page > 1 && this.preloadedPages[page]) {
+        console.log(`Using preloaded data for page ${page}`)
+        this.searchResults = this.preloadedPages[page].images
+        this.totalResults = this.preloadedPages[page].totalResults
+        this.currentPage = page
+        this.totalPages = this.preloadedPages[page].totalPages
+        this.hasNextPage = this.preloadedPages[page].hasNextPage
+        this.loadedImages = 0
+        this.preloadNextPages(page)
+        return
+      }
       
       this.loading = true
-      this.currentQuery = query
+      this.loadedImages = 0
       this.currentPage = page
-      this.showSuggestions = false
-      
-      // Build enhanced query with filters
-      const enhancedQuery = this.buildEnhancedQuery(query)
+      this.currentQuery = this.searchQuery.trim()
+      this.quotaExceeded = false
+      const startTime = Date.now()
       
       try {
-        console.log(`🔍 Searching for: "${enhancedQuery}" (page ${page})`)
+        console.log(`Clean Google search: "${this.currentQuery}" (page ${page})`)
         
-        const response = await fetch(`http://localhost:5003/api/search/images?query=${encodeURIComponent(enhancedQuery)}&page=${page}&limit=24`)
+        // Use CLEAN query - no enhancement
+        const response = await fetch(`http://localhost:5003/api/search/images?query=${encodeURIComponent(this.currentQuery)}&page=${page}&limit=12`)
         const data = await response.json()
+        
+        this.searchTime = Date.now() - startTime
         
         if (data.success) {
           this.searchResults = data.images
@@ -443,12 +523,25 @@ export default {
           this.hasNextPage = data.hasNextPage
           this.userCountry = data.country
           
-          console.log(`✅ Found ${data.totalResults} results, showing page ${data.currentPage}`)
+          console.log(`Search successful: ${data.images.length} images in ${this.searchTime}ms`)
+          
+          // Start preloading for instant navigation
+          if (page === 1) {
+            this.preloadNextPages(1)
+          }
         } else {
+          if (data.message && data.message.includes('quota exceeded')) {
+            this.quotaExceeded = true
+          }
           throw new Error(data.message)
         }
       } catch (error) {
         console.error('Search error:', error)
+        
+        if (error.message.includes('quota exceeded')) {
+          this.quotaExceeded = true
+        }
+        
         this.searchResults = []
         this.totalResults = 0
       } finally {
@@ -456,98 +549,36 @@ export default {
       }
     },
     
-    buildEnhancedQuery(baseQuery) {
-      let query = baseQuery
-      
-      // Default focus: Nigerian female fashion (Raws Apparel specialty)
-      const isMaleQuery = /\b(men|male|gentleman|guy|boy)\b/i.test(baseQuery)
-      const isChildQuery = /\b(child|kid|baby|toddler)\b/i.test(baseQuery)
-      
-      if (!isMaleQuery && !isChildQuery) {
-        // Default to Nigerian female fashion
-        query += ' women ladies female dress gown blouse skirt outfit clothing fashion wear'
-      } else if (isMaleQuery) {
-        query += ' men male shirt suit trouser clothing fashion wear'
-      } else if (isChildQuery) {
-        query += ' children kids clothing dress shirt fashion wear'
-      }
-      
-      // Always add clothing-specific terms
-      query += ' clothing fashion dress outfit wear garment textile fabric'
-      
-      // Always add Nigerian/African context (Raws Apparel focus)
-      query += ' nigerian african traditional modern ankara'
-      
-      // STRICT filtering - remove ALL non-clothing items
-      query += ' -money -cash -currency -dollar -naira -coin -bill -bank -finance -wallet -purse'
-      query += ' -shoes -sandals -slippers -boots -sneakers -heels'
-      query += ' -bag -handbag -backpack -purse -luggage -suitcase'
-      query += ' -jewelry -necklace -earrings -bracelet -ring -watch -chain'
-      query += ' -makeup -cosmetics -lipstick -foundation -powder'
-      query += ' -food -drink -restaurant -kitchen -cooking -recipe'
-      query += ' -car -vehicle -transport -phone -computer -electronics'
-      query += ' -house -building -furniture -chair -table -bed'
-      query += ' -animal -pet -dog -cat -bird -nature -tree -flower'
-      query += ' -sport -football -basketball -gym -exercise'
-      query += ' -book -paper -document -text -writing'
-      query += ' -tool -equipment -machine -device'
-      
-      // Add category filters
-      if (this.selectedCategory) {
-        const categoryTerms = {
-          female: 'women ladies female dress gown blouse skirt',
-          male: 'men male gentleman shirt suit trouser',
-          children: 'kids children child',
-          traditional: 'traditional cultural ethnic ankara agbada gele',
-          modern: 'modern contemporary trendy stylish'
+    async preloadNextPages(currentPage = 1) {
+      const pagesToPreload = []
+      for (let i = currentPage + 1; i <= currentPage + 3; i++) {
+        if (!this.preloadedPages[i] && !this.preloadingPages.has(i)) {
+          pagesToPreload.push(i)
         }
-        query += ` ${categoryTerms[this.selectedCategory]}`
       }
       
-      // Add style filters
-      if (this.selectedStyle) {
-        const styleTerms = {
-          casual: 'casual everyday comfortable',
-          formal: 'formal elegant sophisticated',
-          wedding: 'wedding bridal marriage ceremony',
-          party: 'party celebration festive',
-          business: 'business professional corporate office'
+      if (pagesToPreload.length === 0) return
+      
+      try {
+        console.log(`Preloading pages ${pagesToPreload.join(', ')}...`)
+        
+        pagesToPreload.forEach(page => this.preloadingPages.add(page))
+        
+        const response = await fetch(`http://localhost:5003/api/search/preload?query=${encodeURIComponent(this.currentQuery)}&pages=${pagesToPreload.join(',')}&limit=12`)
+        const data = await response.json()
+        
+        if (data.success) {
+          this.preloadedPages = { ...this.preloadedPages, ...data.pageData }
+          console.log(`Preloaded ${data.totalPreloaded} images`)
         }
-        query += ` ${styleTerms[this.selectedStyle] || this.selectedStyle}`
-      }
-      
-      // Add location filters
-      if (this.selectedLocation) {
-        const locationTerms = {
-          local: 'nigerian african local indigenous',
-          african: 'african traditional ethnic cultural',
-          western: 'western european american international',
-          latest: 'latest 2024 trending modern contemporary'
-        }
-        query += ` ${locationTerms[this.selectedLocation]}`
-      }
-      
-      return query
-    },
-    
-    applyFilters() {
-      if (this.currentQuery) {
-        this.handleSearch(this.currentQuery, 1)
+      } catch (error) {
+        console.error('Preload failed:', error)
+      } finally {
+        pagesToPreload.forEach(page => this.preloadingPages.delete(page))
       }
     },
     
-    clearFilters() {
-      this.selectedCategory = ''
-      this.selectedStyle = ''
-      this.selectedLocation = ''
-      this.showFilters = false
-      this.dropdownOpen = null
-      if (this.currentQuery) {
-        this.handleSearch(this.currentQuery, 1)
-      }
-    },
-    
-    // Custom dropdown methods
+    // Filter methods
     toggleDropdown(type) {
       this.dropdownOpen = this.dropdownOpen === type ? null : type
     },
@@ -557,10 +588,21 @@ export default {
         this.selectedCategory = value
       } else if (type === 'style') {
         this.selectedStyle = value
-      } else if (type === 'location') {
-        this.selectedLocation = value
       }
       
+      this.dropdownOpen = null
+      this.applyFilters()
+    },
+    
+    applyFilters() {
+      if (this.currentQuery) {
+        this.performSearch(1)
+      }
+    },
+    
+    clearFilters() {
+      this.selectedCategory = ''
+      this.selectedStyle = ''
       this.dropdownOpen = null
       this.applyFilters()
     },
@@ -575,117 +617,85 @@ export default {
       return option ? option.label : 'All Styles'
     },
     
-    getLocationLabel(value) {
-      const option = this.locationOptions.find(opt => opt.value === value)
-      return option ? option.label : 'Nigerian Focus'
-    },
-    
     handleClickOutside(event) {
       if (!event.target.closest('.relative')) {
         this.dropdownOpen = null
       }
     },
     
-    getHighQualityImage(image) {
-      // Use the full imageURL for better quality, fallback to thumbnail
-      return image.imageURL || image.thumbnailURL
+    // Navigation methods
+    goToPage(page) {
+      if (page < 1 || (this.totalPages && page > this.totalPages)) return
+      this.performSearch(page)
     },
     
-    cleanTitle(title) {
-      if (!title) return 'Fashion Style'
-      
-      // Remove common noise words and clean up
-      return title
-        .replace(/\s+/g, ' ')
-        .replace(/[^\w\s-]/g, '')
-        .trim()
-        .substring(0, 60)
+    nextPage() {
+      if (this.hasNextPage) {
+        this.goToPage(this.currentPage + 1)
+      }
     },
     
-    async goToPage(page) {
-      if (page < 1 || page > this.totalPages || page === this.currentPage) return
-      await this.handleSearch(this.currentQuery, page)
-      
-      // Scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.goToPage(this.currentPage - 1)
+      }
     },
     
     getVisiblePages() {
-      const pages = []
-      const start = Math.max(1, this.currentPage - 2)
-      const end = Math.min(this.totalPages, this.currentPage + 2)
+      if (!this.totalPages) return []
       
-      for (let i = start; i <= end; i++) {
-        pages.push(i)
+      const totalPages = this.totalPages
+      const current = this.currentPage
+      const visible = []
+      
+      if (current > 3) visible.push(1)
+      if (current > 4) visible.push('...')
+      
+      for (let i = Math.max(1, current - 2); i <= Math.min(totalPages, current + 2); i++) {
+        visible.push(i)
       }
       
-      return pages
+      if (current < totalPages - 3) visible.push('...')
+      if (current < totalPages - 2) visible.push(totalPages)
+      
+      return visible.filter((page, index, arr) => arr.indexOf(page) === index)
     },
     
+    // Image methods
     selectImage(image) {
-      console.log('🖼️ Selected image:', image.title)
+      console.log('Selected image:', image.title)
       this.selectedImage = image
       this.showImageModal = true
     },
     
     async sendToWhatsApp(image) {
       try {
-        const imageUrl = image.imageURL || image.thumbnailURL
-        const message = encodeURIComponent(`Hello Raws Apparel 👋
-
-I found this beautiful style and would like to get it made:
-
-📸 Style: ${this.cleanTitle(image.title)}
-🎨 Description: ${image.description || 'Custom Nigerian fashion piece'}
-
-Image: ${imageUrl}
-
-Please let me know about:
-• Measurements needed
-• Fabric options available
-• Pricing details
-• Timeline for completion
-
-Thank you!`)
+        const message = encodeURIComponent(`Hello Raws Apparel!\n\nI found this style and would like to order:\n\nStyle: ${image.title}\n\nPlease let me know about measurements, fabric options, pricing and timeline.\n\nThank you!`)
         
         const whatsappLink = `https://wa.me/2348128653553?text=${message}`
         window.open(whatsappLink, '_blank')
         
-        console.log('📱 WhatsApp message sent for:', image.title)
+        console.log('WhatsApp message sent for:', image.title)
       } catch (error) {
         console.error('WhatsApp error:', error)
       }
     },
     
     handleImageError(event) {
-      console.log('❌ Image failed to load, trying proxy')
-      const originalSrc = event.target.src
+      event.target.src = `https://via.placeholder.com/300x400/f3f4f6/9ca3af?text=Fashion+Style`
+    },
+    
+    handleImageLoad() {
+      this.loadedImages++
+    },
+    
+    cleanTitle(title) {
+      if (!title) return 'Fashion Style'
       
-      // If it's already a proxy URL or placeholder, don't retry
-      if (originalSrc.includes('localhost:5003/api/image-proxy') || 
-          originalSrc.includes('picsum.photos') || 
-          originalSrc.includes('via.placeholder.com')) {
-        event.target.src = `https://picsum.photos/400/600?random=${Math.floor(Math.random() * 1000)}`
-        return
-      }
-      
-      // Try using the image proxy for Google images
-      if (originalSrc.includes('gstatic.com') || 
-          originalSrc.includes('googleusercontent.com') || 
-          originalSrc.includes('alibaba.com') ||
-          originalSrc.includes('pinimg.com')) {
-        event.target.src = `http://localhost:5003/api/image-proxy/google?url=${encodeURIComponent(originalSrc)}`
-      } else {
-        // Use a reliable placeholder
-        event.target.src = `https://picsum.photos/400/600?random=${Math.floor(Math.random() * 1000)}`
-      }
-    }
-  },
-  watch: {
-    '$route.query.q'(newQuery) {
-      if (newQuery) {
-        this.handleSearch(newQuery)
-      }
+      return title
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 60)
     }
   }
 }
@@ -699,78 +709,36 @@ Thank you!`)
   overflow: hidden;
 }
 
-.btn-secondary {
-  @apply bg-white text-champagne-gold border border-champagne-gold px-6 py-3 rounded-lg font-medium hover:bg-champagne-gold hover:text-white transition-colors duration-200;
+.aspect-w-3 {
+  position: relative;
+  padding-bottom: 133.333333%; /* 4:3 Aspect Ratio */
 }
 
-/* Modern card hover effects */
-.group:hover {
-  transform: translateY(-4px);
+.aspect-w-3 > * {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
-/* Smooth transitions for all interactive elements */
-* {
-  transition: all 0.2s ease-in-out;
+/* Custom scrollbar for suggestions */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
 }
 
-/* Custom scrollbar for modal */
-.overflow-auto::-webkit-scrollbar {
-  width: 6px;
-}
-
-.overflow-auto::-webkit-scrollbar-track {
+.overflow-y-auto::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 3px;
 }
 
-.overflow-auto::-webkit-scrollbar-thumb {
-  background: #E4B169;
-  border-radius: 3px;
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
 }
 
-.overflow-auto::-webkit-scrollbar-thumb:hover {
-  background: #d4a155;
-}
-
-/* Aspect ratio utility */
-.aspect-\[3\/4\] {
-  aspect-ratio: 3 / 4;
-}
-
-/* Rotation utility */
-.rotate-180 {
-  transform: rotate(180deg);
-}
-
-/* Mobile responsive adjustments */
-@media (max-width: 640px) {
-  .grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-  
-  .p-3 {
-    padding: 0.5rem;
-  }
-  
-  .text-sm {
-    font-size: 0.75rem;
-  }
-  
-  /* Ensure tags don't wrap too much on mobile */
-  .flex-wrap {
-    max-height: 4rem;
-    overflow: hidden;
-  }
-  
-  /* Better spacing for mobile filters */
-  .grid-cols-1 {
-    gap: 1rem;
-  }
-}
-
-/* Ensure dropdowns appear above other content */
-.relative .absolute {
-  z-index: 50;
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 </style>

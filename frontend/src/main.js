@@ -14,7 +14,7 @@ import ImageSearchTest from './pages/ImageSearchTest.vue'
 import GoogleSearchDemo from './pages/GoogleSearchDemo.vue'
 
 const routes = [
-  { path: '/', component: Home },
+  { path: '/', component: Search }, // Use Search as home page (now with clean Google results)
   { path: '/search', component: Search },
   { path: '/collections', component: Collections },
   { path: '/about', component: About },

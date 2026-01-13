@@ -73,6 +73,7 @@
               placeholder="Try: ankara dress, wedding gown, business suit, mama styles..."
               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-champagne-gold text-lg"
               @keyup.enter="performSearch"
+              @input="onSearchInput"
             />
             <button 
               @click="performSearch"
@@ -153,7 +154,18 @@
         
         <!-- Results Grid -->
         <div v-if="searchResults.images.length > 0">
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
+          <!-- Pagination Info -->
+          <div class="flex justify-between items-center mb-6">
+            <div class="text-sm text-gray-600">
+              Showing {{ ((currentPage - 1) * resultsPerPage) + 1 }}-{{ Math.min(currentPage * resultsPerPage, searchResults.totalResults) }} 
+              of {{ searchResults.totalResults.toLocaleString() }} results
+            </div>
+            <div class="text-sm text-gray-500">
+              Page {{ currentPage }} of {{ searchResults.totalPages }}
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 gap-4 mb-8">
             <div 
               v-for="image in searchResults.images" 
               :key="image.id"
@@ -170,6 +182,8 @@
                     @error="handleImageError"
                     @load="handleImageLoad"
                     loading="lazy"
+                    decoding="async"
+                    :data-src="image.imageURL"
                   />
                   
                   <!-- Source Badge -->
@@ -208,6 +222,54 @@
                 </div>
               </div>
             </div>
+          </div>
+          
+          <!-- Pagination Controls -->
+          <div class="flex justify-center items-center space-x-4 mb-8">
+            <button 
+              @click="prevPage"
+              :disabled="currentPage <= 1"
+              class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              ← Previous
+            </button>
+            
+            <!-- Page Numbers -->
+            <div class="flex space-x-2">
+              <template v-for="page in getVisiblePages()" :key="page">
+                <span 
+                  v-if="page === '...'"
+                  class="px-3 py-2 text-sm text-gray-500"
+                >
+                  ...
+                </span>
+                <button 
+                  v-else
+                  @click="goToPage(page)"
+                  :class="[
+                    'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    page === currentPage 
+                      ? 'bg-champagne-gold text-jet-black' 
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ]"
+                >
+                  {{ page }}
+                </button>
+              </template>
+            </div>
+            
+            <button 
+              @click="nextPage"
+              :disabled="!searchResults.hasNextPage"
+              class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next →
+            </button>
+          </div>
+          
+          <!-- Preload Status -->
+          <div v-if="Object.keys(preloadedPages).length > 0" class="text-center text-sm text-gray-500 mb-4">
+            ⚡ Pages {{ Object.keys(preloadedPages).join(', ') }} preloaded for instant navigation
           </div>
         </div>
         
@@ -268,6 +330,7 @@ export default {
   data() {
     return {
       searchQuery: 'ankara dress',
+      lastSearchQuery: '',
       loading: false,
       searchResults: null,
       searchTime: 0,
@@ -275,15 +338,24 @@ export default {
       showImageModal: false,
       selectedImage: null,
       apiStatus: {},
+      // Preloading system
+      preloadedPages: {},
+      preloadingPages: new Set(),
+      currentPage: 1,
+      resultsPerPage: 12, // 12 results per page as requested
       exampleQueries: [
         'ankara dress',
-        'wedding gown',
+        'wedding gown', 
         'business suit',
         'mama styles',
         'traditional agbada',
         'casual wear',
         'evening dress',
-        'african print'
+        'african print',
+        'lace styles',
+        'aso ebi',
+        'corporate wear',
+        'party dress'
       ]
     }
   },
@@ -306,24 +378,50 @@ export default {
       }
     },
     
-    async performSearch() {
+    onSearchInput() {
+      // Clear preloaded pages when search query changes
+      if (this.searchQuery.trim() !== this.lastSearchQuery) {
+        this.preloadedPages = {}
+        this.preloadingPages.clear()
+        this.lastSearchQuery = this.searchQuery.trim()
+      }
+    },
+    
+    async performSearch(page = 1) {
       if (!this.searchQuery.trim()) return
+      
+      // If we have preloaded data for this page, use it instantly
+      if (page > 1 && this.preloadedPages[page]) {
+        console.log(`⚡ Using preloaded data for page ${page}`)
+        this.searchResults = this.preloadedPages[page]
+        this.currentPage = page
+        this.loadedImages = 0
+        // Continue preloading next pages
+        this.preloadNextPages(page)
+        return
+      }
       
       this.loading = true
       this.loadedImages = 0
+      this.currentPage = page
       const startTime = Date.now()
       
       try {
-        console.log(`🔍 Testing Google-powered search: "${this.searchQuery}"`)
+        console.log(`🔍 Direct CSE search: "${this.searchQuery}" (page ${page})`)
         
-        const response = await fetch(`http://localhost:5003/api/search/images?query=${encodeURIComponent(this.searchQuery)}&page=1&limit=20`)
+        const response = await fetch(`http://localhost:5003/api/search/images?query=${encodeURIComponent(this.searchQuery)}&page=${page}&limit=${this.resultsPerPage}`)
         const data = await response.json()
         
         this.searchTime = Date.now() - startTime
         
         if (data.success) {
           this.searchResults = data
-          console.log(`✅ Search successful:`, data)
+          console.log(`✅ Search successful: ${data.images.length} images in ${this.searchTime}ms`)
+          
+          // Start aggressive preloading for instant navigation
+          if (page === 1) {
+            this.preloadNextPages(1)
+          }
         } else {
           throw new Error(data.message)
         }
@@ -332,6 +430,59 @@ export default {
         alert('Search failed: ' + error.message)
       } finally {
         this.loading = false
+      }
+    },
+    
+    async preloadNextPages(currentPage = 1) {
+      // Preload next 3-5 pages aggressively for instant navigation
+      const pagesToPreload = []
+      for (let i = currentPage + 1; i <= currentPage + 5; i++) {
+        if (!this.preloadedPages[i] && !this.preloadingPages.has(i)) {
+          pagesToPreload.push(i)
+        }
+      }
+      
+      if (pagesToPreload.length === 0) return
+      
+      try {
+        console.log(`🚀 Preloading pages ${pagesToPreload.join(', ')} for instant loading...`)
+        
+        // Mark pages as being preloaded
+        pagesToPreload.forEach(page => this.preloadingPages.add(page))
+        
+        const response = await fetch(`http://localhost:5003/api/search/preload?query=${encodeURIComponent(this.searchQuery)}&pages=${pagesToPreload.join(',')}&limit=${this.resultsPerPage}`)
+        const data = await response.json()
+        
+        if (data.success) {
+          // Store preloaded data for instant access
+          this.preloadedPages = { ...this.preloadedPages, ...data.pageData }
+          console.log(`✅ Preloaded ${data.totalPreloaded} images across ${pagesToPreload.length} pages`)
+        }
+      } catch (error) {
+        console.error('Preload failed:', error)
+        // Preload failure is not critical, search still works
+      } finally {
+        // Remove from preloading set
+        pagesToPreload.forEach(page => this.preloadingPages.delete(page))
+      }
+    },
+    
+    goToPage(page) {
+      if (page < 1 || (this.searchResults && page > this.searchResults.totalPages)) return
+      
+      console.log(`📄 Navigating to page ${page}`)
+      this.performSearch(page)
+    },
+    
+    nextPage() {
+      if (this.searchResults && this.searchResults.hasNextPage) {
+        this.goToPage(this.currentPage + 1)
+      }
+    },
+    
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.goToPage(this.currentPage - 1)
       }
     },
     
@@ -388,6 +539,33 @@ export default {
         IN: 'India 🇮🇳'
       }
       return countries[code] || `${code} 🌍`
+    },
+    
+    getVisiblePages() {
+      if (!this.searchResults) return []
+      
+      const totalPages = this.searchResults.totalPages
+      const current = this.currentPage
+      const visible = []
+      
+      // Always show first page
+      if (current > 3) visible.push(1)
+      
+      // Show ellipsis if needed
+      if (current > 4) visible.push('...')
+      
+      // Show pages around current
+      for (let i = Math.max(1, current - 2); i <= Math.min(totalPages, current + 2); i++) {
+        visible.push(i)
+      }
+      
+      // Show ellipsis if needed
+      if (current < totalPages - 3) visible.push('...')
+      
+      // Always show last page
+      if (current < totalPages - 2) visible.push(totalPages)
+      
+      return visible.filter((page, index, arr) => arr.indexOf(page) === index)
     }
   }
 }
