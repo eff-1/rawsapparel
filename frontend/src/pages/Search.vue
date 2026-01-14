@@ -15,7 +15,7 @@
                   v-model="searchQuery"
                   type="text"
                   placeholder="Search for fashion styles..."
-                  class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full px-4 py-3 pr-12 border-2 border-champagne-gold rounded-l-lg focus:outline-none focus:ring-2 focus:ring-champagne-gold focus:border-champagne-gold"
                   @keyup.enter="performSearch"
                   @input="onSearchInput"
                   @focus="showSuggestions = true"
@@ -44,7 +44,7 @@
               <button 
                 @click="performSearch"
                 :disabled="loading"
-                class="px-6 py-3 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+                class="px-6 py-3 bg-champagne-gold text-jet-black rounded-r-lg hover:bg-champagne-gold/90 focus:outline-none focus:ring-2 focus:ring-champagne-gold disabled:opacity-50 transition-colors font-medium"
               >
                 <svg v-if="!loading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -56,13 +56,14 @@
               </button>
             </div>
             
-            <!-- Quick Suggestions -->
+            <!-- Quick Suggestions - Responsive -->
             <div class="mt-4 flex flex-wrap justify-center gap-2">
               <button 
-                v-for="suggestion in quickSuggestions" 
+                v-for="(suggestion, index) in quickSuggestions" 
                 :key="suggestion"
+                v-show="index < 4 || (index < 6 && !isMobile)"
                 @click="searchQuery = suggestion; performSearch()"
-                class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors"
+                class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-champagne-gold hover:text-white transition-colors"
               >
                 {{ suggestion }}
               </button>
@@ -173,7 +174,7 @@
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center items-center py-20">
         <div class="text-center">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-champagne-gold mb-4"></div>
           <p class="text-gray-600">Searching for styles...</p>
         </div>
       </div>
@@ -201,7 +202,7 @@
             <!-- Image Container -->
             <div class="aspect-w-3 aspect-h-4 bg-gray-200 overflow-hidden">
               <img 
-                :src="image.thumbnailURL || image.imageURL" 
+                :src="image.imageURL || image.thumbnailURL" 
                 :alt="image.title"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 @error="handleImageError"
@@ -262,7 +263,7 @@
                 :class="[
                   'px-3 py-2 text-sm font-medium rounded-md transition-colors',
                   page === currentPage 
-                    ? 'bg-blue-600 text-white' 
+                    ? 'bg-champagne-gold text-jet-black font-semibold' 
                     : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                 ]"
               >
@@ -332,10 +333,42 @@
           <!-- Details -->
           <div class="md:w-80 p-4 space-y-4">
             <div>
-              <h4 class="font-medium text-gray-900 mb-2">Details</h4>
-              <div class="space-y-1 text-sm text-gray-600">
-                <p><span class="font-medium">Dimensions:</span> {{ selectedImage.width }} × {{ selectedImage.height }}</p>
-                <p><span class="font-medium">Source:</span> {{ selectedImage.photographer }}</p>
+              <h4 class="font-medium text-gray-900 mb-2">Style Information</h4>
+              <p class="text-sm text-gray-600 mb-3">{{ selectedImage.description || selectedImage.title }}</p>
+            </div>
+            
+            <div>
+              <h4 class="font-medium text-gray-900 mb-2">Specifications</h4>
+              <div class="space-y-2 text-sm text-gray-600">
+                <div class="flex justify-between">
+                  <span class="font-medium">Dimensions:</span>
+                  <span>{{ selectedImage.width }} × {{ selectedImage.height }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium">Source:</span>
+                  <span>{{ selectedImage.photographer }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium">Quality:</span>
+                  <span class="text-green-600">High Definition</span>
+                </div>
+                <div v-if="selectedImage.contextLink" class="flex justify-between">
+                  <span class="font-medium">Origin:</span>
+                  <a :href="selectedImage.contextLink" target="_blank" class="text-champagne-gold hover:underline">View Source</a>
+                </div>
+              </div>
+            </div>
+            
+            <div v-if="selectedImage.tags && selectedImage.tags.length > 0">
+              <h4 class="font-medium text-gray-900 mb-2">Style Tags</h4>
+              <div class="flex flex-wrap gap-2">
+                <span 
+                  v-for="tag in selectedImage.tags.slice(0, 5)" 
+                  :key="tag"
+                  class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                >
+                  {{ tag }}
+                </span>
               </div>
             </div>
             
@@ -357,6 +390,8 @@
 </template>
 
 <script>
+import { apiRequest, API_ENDPOINTS } from '../utils/api.js'
+
 export default {
   name: 'Search',
   data() {
@@ -387,27 +422,87 @@ export default {
       selectedCategory: '',
       selectedStyle: '',
       
-      // Search suggestions
+      // Search suggestions - expanded list like Google CSE
       showSuggestions: false,
       allSuggestions: [
+        // Nigerian Fashion
         'Wedding gown',
         'Traditional wear',
         'Latest Ankara styles',
         'Party dress',
         'Stoned dresses',
         'Casual wear',
-        'Evening dress',
-        'Business suit',
-        'Agbada',
+        'Aso ebi styles',
         'Lace styles',
-        'Aso ebi',
-        'Corporate wear',
+        'Nigerian wedding dress',
+        'Ankara gown',
+        'Agbada styles',
+        'Senator wear',
+        'Kaftan styles',
+        'Bubu gown',
+        'Dashiki',
+        'African print dress',
+        'Ankara skirt and blouse',
+        'Iro and buba',
+        'Gele styles',
+        'Nigerian traditional attire',
+        // Modern Fashion
+        'Evening dress',
         'Cocktail dress',
         'Maxi dress',
         'Mini dress',
+        'Midi dress',
+        'Bodycon dress',
+        'A-line dress',
+        'Ball gown',
+        'Prom dress',
+        'Bridesmaid dress',
+        'Mother of bride dress',
+        'Church dress',
+        'Office wear',
+        'Business suit',
+        'Corporate wear',
+        'Blazer styles',
+        'Trouser styles',
         'Jumpsuit',
-        'Kaftan',
-        'Dashiki'
+        'Romper',
+        'Two piece set',
+        // Casual & Others
+        'Casual dress',
+        'Summer dress',
+        'Beach wear',
+        'Vacation outfit',
+        'Denim styles',
+        'Leather jacket',
+        'Coat styles',
+        'Cardigan',
+        'Blouse styles',
+        'Top styles',
+        'Skirt styles',
+        'Palazzo pants',
+        'Wide leg pants',
+        'Pencil skirt',
+        'Pleated skirt',
+        // Special Occasions
+        'Birthday dress',
+        'Anniversary dress',
+        'Graduation dress',
+        'Dinner dress',
+        'Red carpet dress',
+        'Gala dress',
+        'Formal gown',
+        'Semi formal dress',
+        // Trending
+        'Latest fashion trends',
+        'New arrival styles',
+        'Trendy outfits',
+        'Fashion 2024',
+        'Designer dress',
+        'Luxury fashion',
+        'High fashion',
+        'Runway styles',
+        'Celebrity fashion',
+        'Instagram fashion'
       ],
       
       quickSuggestions: [
@@ -439,12 +534,16 @@ export default {
   
   computed: {
     filteredSuggestions() {
-      if (!this.searchQuery.trim()) return this.allSuggestions.slice(0, 8)
+      if (!this.searchQuery.trim()) return this.allSuggestions.slice(0, 10)
       
       const query = this.searchQuery.toLowerCase()
       return this.allSuggestions
         .filter(suggestion => suggestion.toLowerCase().includes(query))
-        .slice(0, 8)
+        .slice(0, 10)
+    },
+    
+    isMobile() {
+      return window.innerWidth < 768
     }
   },
   
@@ -509,8 +608,8 @@ export default {
       try {
         console.log(`Clean Google search: "${this.currentQuery}" (page ${page})`)
         
-        // Use CLEAN query - no enhancement
-        const response = await fetch(`http://localhost:5003/api/search/images?query=${encodeURIComponent(this.currentQuery)}&page=${page}&limit=12`)
+        // Use API utility for consistent URL handling
+        const response = await apiRequest(API_ENDPOINTS.searchImages(this.currentQuery, page, 12))
         const data = await response.json()
         
         this.searchTime = Date.now() - startTime
@@ -564,7 +663,8 @@ export default {
         
         pagesToPreload.forEach(page => this.preloadingPages.add(page))
         
-        const response = await fetch(`http://localhost:5003/api/search/preload?query=${encodeURIComponent(this.currentQuery)}&pages=${pagesToPreload.join(',')}&limit=12`)
+        // Use API utility for consistent URL handling
+        const response = await apiRequest(API_ENDPOINTS.preloadPages(this.currentQuery, pagesToPreload, 12))
         const data = await response.json()
         
         if (data.success) {
@@ -596,6 +696,33 @@ export default {
     
     applyFilters() {
       if (this.currentQuery) {
+        // Build enhanced query with selected filters
+        let enhancedQuery = this.currentQuery
+        
+        // Add category filter to query
+        if (this.selectedCategory) {
+          const categoryTerms = {
+            female: 'women ladies female',
+            male: 'men male gentleman',
+            traditional: 'traditional african nigerian',
+            modern: 'modern contemporary trendy'
+          }
+          enhancedQuery += ` ${categoryTerms[this.selectedCategory]}`
+        }
+        
+        // Add style filter to query
+        if (this.selectedStyle) {
+          const styleTerms = {
+            casual: 'casual everyday',
+            formal: 'formal elegant',
+            wedding: 'wedding bridal',
+            party: 'party celebration'
+          }
+          enhancedQuery += ` ${styleTerms[this.selectedStyle]}`
+        }
+        
+        // Update search query and perform search
+        this.searchQuery = enhancedQuery
         this.performSearch(1)
       }
     },

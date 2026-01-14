@@ -325,6 +325,8 @@
 </template>
 
 <script>
+import { apiRequest, API_ENDPOINTS } from '../utils/api.js'
+
 export default {
   name: 'GoogleSearchDemo',
   data() {
@@ -369,7 +371,7 @@ export default {
   methods: {
     async checkApiStatus() {
       try {
-        const response = await fetch('http://localhost:5003/api/google-test/setup')
+        const response = await apiRequest(API_ENDPOINTS.googleTestSetup())
         const data = await response.json()
         this.apiStatus.google = data.setup
       } catch (error) {
@@ -409,7 +411,7 @@ export default {
       try {
         console.log(`🔍 Direct CSE search: "${this.searchQuery}" (page ${page})`)
         
-        const response = await fetch(`http://localhost:5003/api/search/images?query=${encodeURIComponent(this.searchQuery)}&page=${page}&limit=${this.resultsPerPage}`)
+        const response = await apiRequest(API_ENDPOINTS.searchImages(this.searchQuery, page, this.resultsPerPage))
         const data = await response.json()
         
         this.searchTime = Date.now() - startTime
@@ -450,7 +452,7 @@ export default {
         // Mark pages as being preloaded
         pagesToPreload.forEach(page => this.preloadingPages.add(page))
         
-        const response = await fetch(`http://localhost:5003/api/search/preload?query=${encodeURIComponent(this.searchQuery)}&pages=${pagesToPreload.join(',')}&limit=${this.resultsPerPage}`)
+        const response = await apiRequest(API_ENDPOINTS.preloadPages(this.searchQuery, pagesToPreload, this.resultsPerPage))
         const data = await response.json()
         
         if (data.success) {
