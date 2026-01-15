@@ -1,8 +1,28 @@
 {
+<<<<<<< HEAD
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+=======
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
+>>>>>>> 100382cc16e7c16f697ec29ba45f8057ea147ef3
     }
   ]
 }

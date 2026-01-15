@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+node_modules
+dist
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+=======
 # Dependencies
 node_modules/
 */node_modules/
@@ -36,3 +46,4 @@ Thumbs.db
 # Temporary
 tmp/
 temp/
+>>>>>>> 100382cc16e7c16f697ec29ba45f8057ea147ef3

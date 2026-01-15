@@ -1,6 +1,10 @@
 [build]
+<<<<<<< HEAD
+  publish = "dist"
+=======
   base = "frontend"
   publish = "frontend/dist"
+>>>>>>> 100382cc16e7c16f697ec29ba45f8057ea147ef3
   command = "npm run build"
 
 [build.environment]
@@ -14,4 +18,17 @@
 [[headers]]
   for = "/assets/*"
   [headers.values]
+<<<<<<< HEAD
+    Cache-Control = "max-age=31536000"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "max-age=31536000"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+=======
+>>>>>>> 100382cc16e7c16f697ec29ba45f8057ea147ef3
     Cache-Control = "max-age=31536000"
