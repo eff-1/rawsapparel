@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pure Google Search Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .search-box { margin: 20px 0; }
+        input { padding: 10px; width: 300px; font-size: 16px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        .results { margin-top: 20px; }
+        .image-item { 
+            display: inline-block; 
+            margin: 10px; 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            width: 200px; 
+        }
+        .image-item img { width: 100%; height: 150px; object-fit: cover; }
+        .loading { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Pure Google API Test</h1>
+    <p>This tests the Google API directly without any Vue.js interference</p>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Enter search term (e.g., ankara dress)" value="ankara dress">
+        <button onclick="searchImages()">Search</button>
+    </div>
+    
+    <div id="status"></div>
+    <div id="results" class="results"></div>
+
+    <script>
+        async function searchImages() {
+            const query = document.getElementById('searchInput').value.trim()
+            if (!query) return
+            
+            const statusDiv = document.getElementById('status')
+            const resultsDiv = document.getElementById('results')
+            
+            statusDiv.innerHTML = `<div class="loading">🔍 Searching for "${query}"...</div>`
+            resultsDiv.innerHTML = ''
+            
+            try {
+                const url = `http://localhost:5003/api/search/images?query=${encodeURIComponent(query)}&page=1&limit=12`
+                console.log('🔗 API URL:', url)
+                
+                const response = await fetch(url)
+                const data = await response.json()
+                
+                if (data.success && data.images.length > 0) {
+                    statusDiv.innerHTML = `✅ Found ${data.images.length} results (${data.totalResults} total available)`
+                    
+                    let html = ''
+                    data.images.forEach((img, i) => {
+                        html += `
+                            <div class="image-item">
+                                <img src="${img.thumbnailURL || img.imageURL}" alt="${img.title}" onerror="this.src='https://via.placeholder.com/200x150?text=Image+${i+1}'">
+                                <div><strong>${img.title}</strong></div>
+                                <div><small>${img.photographer}</small></div>
+                            </div>
+                        `
+                    })
+                    resultsDiv.innerHTML = html
+                    
+                    console.log('📊 Results:', data.images)
+                } else {
+                    statusDiv.innerHTML = `❌ No results found: ${data.message || 'Unknown error'}`
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Error: ${error.message}`
+                console.error('Search error:', error)
+            }
+        }
+        
+        // Allow Enter key to search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchImages()
+            }
+        })
+        
+        // Auto-search on load
+        window.onload = () => searchImages()
+    </script>
+</body>
+</html>
