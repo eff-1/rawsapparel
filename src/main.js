@@ -14,7 +14,7 @@ import ImageSearchTest from './pages/ImageSearchTest.vue'
 import GoogleSearchDemo from './pages/GoogleSearchDemo.vue'
 
 const routes = [
-  { path: '/', component: Search }, // Use Search as home page (now with clean Google results)
+  { path: '/', component: Home },
   { path: '/search', component: Search },
   { path: '/collections', component: Collections },
   { path: '/about', component: About },
@@ -28,7 +28,15 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory('/'),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    // Always scroll to top when navigating to a new page
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0, behavior: 'smooth' }
+    }
+  }
 })
 
 createApp(App).use(router).mount('#app')

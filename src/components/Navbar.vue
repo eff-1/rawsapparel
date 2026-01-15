@@ -1,48 +1,94 @@
 <template>
-  <nav class="sticky top-0 z-50 bg-jet-black/90 backdrop-blur-sm border-b border-champagne-gold/20">
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
+      <div class="flex justify-between items-center h-20">
         <!-- Logo -->
-        <router-link to="/" class="text-champagne-gold font-playfair text-2xl font-bold">
-          Raws Apparel
+        <router-link to="/" class="flex items-center space-x-3 group">
+          <div class="w-10 h-10 bg-gradient-to-br from-champagne-gold to-rich-bronze rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+            <span class="text-white font-bold text-xl">R</span>
+          </div>
+          <span class="text-2xl font-bold bg-gradient-to-r from-champagne-gold to-rich-bronze bg-clip-text text-transparent">
+            Raws Apparel
+          </span>
         </router-link>
         
         <!-- Desktop Menu -->
-        <div class="hidden md:flex space-x-8">
+        <div class="hidden md:flex items-center space-x-1">
           <router-link 
             v-for="item in menuItems" 
             :key="item.name"
             :to="item.path"
-            class="text-soft-warm-gray hover:text-champagne-gold transition-colors duration-200 font-medium"
-            :class="{ 'text-champagne-gold border-b-2 border-champagne-gold': $route.path === item.path }"
+            class="px-4 py-2 rounded-xl text-gray-700 hover:text-champagne-gold hover:bg-champagne-gold/5 transition-all duration-300 font-medium relative group"
           >
             {{ item.name }}
+            <span 
+              class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-champagne-gold to-rich-bronze group-hover:w-3/4 transition-all duration-300"
+              :class="{ 'w-3/4': $route.path === item.path }"
+            ></span>
           </router-link>
+        </div>
+        
+        <!-- CTA Button -->
+        <div class="hidden md:flex items-center space-x-4">
+          <a 
+            href="https://wa.me/2348128653553?text=Hello%20Raws%20Apparel!"
+            target="_blank"
+            class="px-6 py-3 bg-gradient-to-r from-champagne-gold to-rich-bronze text-white rounded-xl font-medium hover:shadow-lg hover:shadow-champagne-gold/30 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+            </svg>
+            <span>Contact</span>
+          </a>
         </div>
         
         <!-- Mobile Menu Button -->
         <button 
           @click="mobileMenuOpen = !mobileMenuOpen"
-          class="md:hidden text-soft-warm-gray hover:text-champagne-gold"
+          class="md:hidden p-2 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
       </div>
       
       <!-- Mobile Menu -->
-      <div v-if="mobileMenuOpen" class="md:hidden py-4 border-t border-champagne-gold/20">
-        <router-link 
-          v-for="item in menuItems" 
-          :key="item.name"
-          :to="item.path"
-          @click="mobileMenuOpen = false"
-          class="block py-2 text-soft-warm-gray hover:text-champagne-gold transition-colors duration-200"
-        >
-          {{ item.name }}
-        </router-link>
-      </div>
+      <transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0 -translate-y-4"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-4"
+      >
+        <div v-if="mobileMenuOpen" class="md:hidden py-4 border-t border-gray-100">
+          <router-link 
+            v-for="item in menuItems" 
+            :key="item.name"
+            :to="item.path"
+            @click="mobileMenuOpen = false"
+            class="block px-4 py-3 rounded-xl text-gray-700 hover:text-champagne-gold hover:bg-champagne-gold/5 transition-all duration-300 font-medium"
+            :class="{ 'bg-champagne-gold/10 text-champagne-gold': $route.path === item.path }"
+          >
+            {{ item.name }}
+          </router-link>
+          
+          <a 
+            href="https://wa.me/2348128653553?text=Hello%20Raws%20Apparel!"
+            target="_blank"
+            class="mt-4 mx-4 px-6 py-3 bg-gradient-to-r from-champagne-gold to-rich-bronze text-white rounded-xl font-medium flex items-center justify-center space-x-2 shadow-lg"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+            </svg>
+            <span>Contact Us</span>
+          </a>
+        </div>
+      </transition>
     </div>
   </nav>
 </template>
@@ -57,9 +103,13 @@ export default {
         { name: 'Home', path: '/' },
         { name: 'Collections', path: '/collections' },
         { name: 'Search', path: '/search' },
-        { name: 'About', path: '/about' },
-        { name: 'Contact', path: '/contact' }
+        { name: 'About', path: '/about' }
       ]
+    }
+  },
+  watch: {
+    $route() {
+      this.mobileMenuOpen = false
     }
   }
 }

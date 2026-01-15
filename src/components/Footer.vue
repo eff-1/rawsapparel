@@ -1,6 +1,6 @@
 <template>
-  <footer class="bg-jet-black text-soft-warm-gray py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <footer class="bg-gradient-to-br from-jet-black via-gray-900 to-jet-black text-gray-300 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="grid md:grid-cols-4 gap-8">
         <!-- Brand -->
         <div class="md:col-span-2">
