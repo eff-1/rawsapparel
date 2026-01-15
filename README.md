@@ -280,4 +280,5 @@ cd frontend && npm run dev
 **Built with ❤️ for the fashion industry in Nigeria and beyond.**
 >>>>>>> 100382cc16e7c16f697ec29ba45f8057ea147ef3
 #   r a w s a p p a r e l  
+ #   r a w s a p p a r e l  
  
