@@ -228,7 +228,6 @@ export default {
             rawResults: { responseLength: responseText.length, extractedPins: results.length }
           }
           
-          
           this.apiStatus = {
             success: true,
             message: `Successfully extracted ${results.length} Pinterest pins via direct method`,

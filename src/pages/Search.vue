@@ -7,10 +7,6 @@
           <h1 class="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Fashion Search</h1>
           <p class="text-gray-600 mb-6 text-lg">Discover millions of fashion styles</p>
           
-
-
-
-          
           <!-- Search Bar -->
           <div class="max-w-2xl mx-auto relative">
             <div class="flex shadow-lg rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl">
