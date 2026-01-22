@@ -22,15 +22,14 @@ const routes = [
   { path: '/pinterest-test', component: PinterestTest },
   { path: '/image-search-test', component: ImageSearchTest },
   { path: '/google-demo', component: GoogleSearchDemo },
-  { path: '/contact', redirect: '/about' }, // Redirect contact to about page
-  { path: '/:pathMatch(.*)*', redirect: '/' } // Catch-all route
+  { path: '/contact', redirect: '/about' },
+  { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 
 const router = createRouter({
   history: createWebHistory('/'),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    // Always scroll to top when navigating to a new page
     if (savedPosition) {
       return savedPosition
     } else {
